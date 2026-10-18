@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import random
+import re
 import signal
 import subprocess
 import sys
@@ -385,9 +386,14 @@ class TestTheLabItself:
         assert subprocess.run(["ip", "-o", "link"], capture_output=True, text=True).stdout == before
 
     def test_the_machines_own_ruleset_is_untouched(self, tmp_path):
-        before = subprocess.run(["nft", "list", "ruleset"], capture_output=True, text=True).stdout
+        def ruleset() -> str:
+            # a runner's own firewall counts its traffic while the test runs, so compare without the counters
+            out = subprocess.run(["nft", "list", "ruleset"], capture_output=True, text=True).stdout
+            return re.sub(r"packets \d+ bytes \d+", "packets N bytes N", out)
+
+        before = ruleset()
         check(tmp_path, forward_ruleset('iifname "ea" accept'), '[expect.accept]\n"a -> b" = ["tcp/22"]\n')
-        assert subprocess.run(["nft", "list", "ruleset"], capture_output=True, text=True).stdout == before
+        assert ruleset() == before
 
     def test_two_runs_at_the_same_time_do_not_collide(self, tmp_path):
         spec = make_spec(

@@ -417,9 +417,10 @@ zone host  eth0 ---- <iface> [ firewall: your ruleset is loaded here ] <iface> -
 * **CI machines:** Ubuntu 22.04 and 24.04 on x86_64 and 24.04 on arm64, Python 3.11, 3.12 and 3.13, as root and, for
   the tests that need no lab, as an ordinary user. A separate job installs the built wheel into a clean virtualenv and
   runs the examples from there, the way the CI snippet above does.
-* A one-off mutation check, run by hand and not in CI, changed lines that decide a verdict or guard the lab (the reject
-  errno list, the sanity pass, the trace filter, the cleanup prefix, and so on) and ran the tests; every change that
-  altered behaviour was caught.
+* A one-off mutation check, run by hand and not in CI, made 45 hand-picked single-line changes to lines that decide a
+  verdict or guard the lab (the reject errno list, the sanity pass, the trace filter, the cleanup prefix, and so on)
+  and ran the whole suite after each: the tests failed for all 45. The list is not exhaustive and it is not
+  repeated in CI, so it says what was checked once, not what is guaranteed.
 
 ## What it cannot do
 

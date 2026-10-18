@@ -336,6 +336,7 @@ from a port nobody listens on.
 | `check` | `-f, --format {text,md,json}` | how to print the result (default text) |
 | `check` | `--junit FILE` | also write a JUnit XML report |
 | `check` | `--github-summary` | append a Markdown report to $GITHUB_STEP_SUMMARY |
+| `check` | `--github-annotations` | print one ::error line per failed expectation, which GitHub Actions shows on the pull request |
 | `check` | `--no-explain` | do not re-send failed flows with tracing to find the deciding rule |
 | `check` | `--no-sanity` | skip the first pass that sends every flow with no ruleset loaded |
 | `matrix` | `SPEC` | the spec file (TOML) |
@@ -375,6 +376,9 @@ On a GitHub Actions runner:
 
 The check lands in the job summary as a table, the JUnit file can go to any test reporter, and the matrix step fails
 with a diff when somebody changes who can reach whom without updating the committed table.
+
+Add `--github-annotations` and every failed expectation is also printed as an `::error` workflow command, which GitHub
+shows on the pull request next to the spec file, with the rule that decided it.
 
 ## How it works
 
@@ -440,6 +444,11 @@ zone host  eth0 ---- <iface> [ firewall: your ruleset is loaded here ] <iface> -
   `CAP_NET_ADMIN` and `CAP_SYS_ADMIN`; it will say what failed.
 * It tests a ruleset, not a deployment. It cannot know that the file you test is the file on the machine, or that the
   interface called `eth1` in the spec is the one called `eth1` there.
+
+## More
+
+[Design notes](docs/design-notes.md) (why it is built this way, what was rejected, how it was checked),
+[CHANGELOG](CHANGELOG.md) and [ROADMAP](ROADMAP.md).
 
 ## License
 

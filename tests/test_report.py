@@ -147,3 +147,51 @@ def test_facts_are_empty_without_an_observation():
     f = Flow("a", "b", "tcp", 1)
     c = engine.CheckResult(Expectation(f, "accept"), result(f, "accept", "", {"label": "b"}), [])
     assert report.facts(c) == ""
+
+
+class TestGithubAnnotations:
+    def test_one_error_line_per_failed_expectation(self):
+        out = report.render_github_annotations(fake_run(), "firewall/spec.toml")
+        lines = out.splitlines()
+        assert len(lines) == 1
+        assert lines[0].startswith(
+            "::error file=firewall/spec.toml,title=nft-assert%3A wan -> fw tcp/22 should drop::"
+        )
+
+    def test_the_message_carries_the_problem_and_the_packet_path_on_one_line(self):
+        (line,) = report.render_github_annotations(fake_run(), "spec.toml").splitlines()
+        message = line.split("::", 2)[2]
+        assert "expected drop, got accept (connection established)" in message
+        assert (
+            '%0Apacket path: inet filter input: rule `iifname "eth0" tcp dport 22 accept` -> accept'
+            in message
+        )
+        assert "\n" not in line
+
+    def test_nothing_is_printed_when_everything_passed(self):
+        run = fake_run()
+        run.checks = [c for c in run.checks if c.ok]
+        assert report.render_github_annotations(run, "spec.toml") == ""
+
+    def test_special_characters_are_escaped_the_way_github_wants(self):
+        run = fake_run()
+        run.checks[1].problems = ["100% wrong\r\nsecond line"]
+        run.checks[1].explanation = []
+        line = report.render_github_annotations(run, "dir,odd:name.toml")
+        assert "file=dir%2Codd%3Aname.toml," in line
+        assert line.endswith("::100%25 wrong%0D%0Asecond line")
+
+    def test_an_absolute_path_inside_the_workspace_is_made_relative(self):
+        spec = "/home/runner/work/repo/repo/firewall/spec.toml"
+        out = report.render_github_annotations(fake_run(), spec, "/home/runner/work/repo/repo")
+        assert out.startswith("::error file=firewall/spec.toml,")
+
+    def test_a_path_outside_the_workspace_or_a_relative_one_is_left_alone(self):
+        outside = report.render_github_annotations(
+            fake_run(), "/etc/spec.toml", "/home/runner/work/repo/repo"
+        )
+        assert outside.startswith("::error file=/etc/spec.toml,")
+        sibling = report.render_github_annotations(fake_run(), "/work/repo2/spec.toml", "/work/repo")
+        assert sibling.startswith("::error file=/work/repo2/spec.toml,")
+        rel = report.render_github_annotations(fake_run(), "spec.toml", "/work/repo")
+        assert rel.startswith("::error file=spec.toml,")

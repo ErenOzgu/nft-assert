@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from xml.sax.saxutils import escape, quoteattr
 
@@ -125,6 +126,41 @@ def render_junit(run: CheckRun) -> str:
         out.append("  </testcase>")
     out.append("</testsuite>")
     return "\n".join(out) + "\n"
+
+
+def _property(text: str) -> str:
+    """Escape a value in the property part of a GitHub workflow command (after ``file=`` and ``title=``)."""
+    return (
+        text.replace("%", "%25")
+        .replace("\r", "%0D")
+        .replace("\n", "%0A")
+        .replace(":", "%3A")
+        .replace(",", "%2C")
+    )
+
+
+def _message(text: str) -> str:
+    """Escape the message part of a GitHub workflow command."""
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def render_github_annotations(run: CheckRun, spec_arg: str, workspace: str | None = None) -> str:
+    """One ``::error`` workflow command per failed expectation, so GitHub shows it on the pull request.
+
+    ``spec_arg`` is the spec path as the user gave it; GitHub wants it relative to the repository, so a path inside
+    ``workspace`` (``$GITHUB_WORKSPACE``) is made relative. Nothing is returned when everything passed.
+    """
+    file = spec_arg
+    if workspace and os.path.isabs(spec_arg):
+        root = os.path.join(workspace, "")
+        if spec_arg.startswith(root):
+            file = spec_arg[len(root) :]
+    lines = []
+    for c in run.failed:
+        title = f"nft-assert: {c.expectation.flow} should {c.expectation.verdict}"
+        body = "\n".join([*c.problems, *(f"packet path: {x}" for x in c.explanation)])
+        lines.append(f"::error file={_property(file)},title={_property(title)}::{_message(body)}")
+    return "\n".join(lines)
 
 
 # ---- matrix and diff ---------------------------------------------------------------------------------------

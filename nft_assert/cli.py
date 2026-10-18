@@ -52,6 +52,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--github-summary", action="store_true", help="append a Markdown report to $GITHUB_STEP_SUMMARY"
     )
     c.add_argument(
+        "--github-annotations",
+        action="store_true",
+        help="print one ::error line per failed expectation, which GitHub Actions shows on the pull request",
+    )
+    c.add_argument(
         "--no-explain",
         action="store_true",
         help="do not re-send failed flows with tracing to find the deciding rule",
@@ -149,6 +154,10 @@ def _check(args: argparse.Namespace, s: spec_mod.Spec) -> int:
     print(shown.rstrip("\n"))
     if args.junit:
         Path(args.junit).write_text(report.render_junit(run), encoding="utf-8")
+    if args.github_annotations:
+        notes = report.render_github_annotations(run, args.spec, os.environ.get("GITHUB_WORKSPACE"))
+        if notes:
+            print(notes)
     if args.github_summary and os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
             fh.write(report.render_markdown(run) + "\n")

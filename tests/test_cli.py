@@ -131,6 +131,21 @@ class TestCheck:
         monkeypatch.delenv("GITHUB_STEP_SUMMARY")
         cli.main(["check", str(EDGE), "--github-summary"])  # no variable: nothing happens, nothing breaks
 
+    def test_annotations_are_printed_only_when_asked(self, monkeypatch, capsys):
+        FakeEngine(monkeypatch)
+        cli.main(["check", str(EDGE)])
+        assert "::error" not in capsys.readouterr().out
+        assert cli.main(["check", str(EDGE), "--github-annotations"]) == 1
+        out = capsys.readouterr().out
+        assert out.count("::error file=") == 1
+        assert out.rstrip("\n").splitlines()[-1].startswith("::error file=")
+
+    def test_annotations_use_the_workspace_to_name_the_file(self, monkeypatch, capsys):
+        FakeEngine(monkeypatch)
+        monkeypatch.setenv("GITHUB_WORKSPACE", str(EDGE.parent))
+        cli.main(["check", str(EDGE), "--github-annotations"])
+        assert f"::error file={EDGE.name}," in capsys.readouterr().out
+
 
 class TestMatrix:
     def test_print_write_and_check(self, monkeypatch, capsys, tmp_path):

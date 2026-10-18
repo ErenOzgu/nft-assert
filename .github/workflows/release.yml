@@ -20,7 +20,7 @@ permissions:
 jobs:
   version:
     name: Which version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.pick.outputs.tag }}
       release: ${{ steps.pick.outputs.release }}
@@ -63,7 +63,7 @@ jobs:
     name: Package and GitHub release
     needs: version
     if: needs.version.outputs.release == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       VERSION: ${{ needs.version.outputs.tag }}
     steps:

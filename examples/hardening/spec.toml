@@ -1,0 +1,19 @@
+# The host firewall that the ubuntu-hardening-roles `firewall` role installs (rendered once with its default
+# variables plus firewall_tcp_ports: [443], see host.nft). It only has an input chain, so every flow here is
+# "something on the network -> this host".
+[ruleset]
+file = "host.nft"
+
+[zones.net]
+subnet = "198.51.100.0/24"
+
+[expect.accept]
+"net -> fw" = ["tcp/22", "tcp/443", "icmp"]
+
+[expect.drop]
+"net -> fw" = ["tcp/21", "tcp/23", "tcp/80", "tcp/3306", "tcp/5432", "udp/53", "udp/123"]
+
+[matrix]
+tcp = [22, 80, 443, 3306]
+udp = [53]
+icmp = true

@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nft-assert"
+version = "0.1.0"
+description = "Load an nftables ruleset into a lab of real network namespaces, send real packets, and check which flows are accepted, rejected or dropped. Names the rule that decided a failed check."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Eren Özgü" }]
+keywords = ["nftables", "firewall", "netfilter", "testing", "network-namespaces", "ci", "linux"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+nft-assert = "nft_assert.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nft_assert*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"nft_assert/*" = ["E501"]
+"tests/*" = ["E501"]
+"examples/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: builds a real lab of network namespaces (needs root, ip and nft)"]

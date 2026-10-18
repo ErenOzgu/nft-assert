@@ -1,0 +1,40 @@
+#!/usr/sbin/nft -f
+# An example edge firewall: wan (eth0), lan (eth1), dmz (eth2).
+#   - the lan may go anywhere, and may manage the dmz
+#   - the internet reaches the dmz web server only through a port forward (8080 -> 10.0.2.2:80)
+#   - the dmz may fetch updates over the web but must never send mail
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
+    ct state invalid drop
+    ct state established,related accept
+    iifname "lo" accept
+    iifname "eth1" tcp dport 22 accept comment "ssh to the firewall, from the lan only"
+    icmp type echo-request limit rate 5/second accept
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+    ct state invalid drop
+    ct state established,related accept
+    iifname "eth1" oifname "eth0" accept comment "lan to the internet"
+    iifname "eth1" oifname "eth2" tcp dport { 22, 80, 443 } accept comment "lan manages the dmz"
+    iifname "eth1" oifname "eth2" icmp type echo-request accept
+    iifname "eth0" oifname "eth2" ct status dnat tcp dport 80 accept comment "internet to the web server, only through the port forward"
+    iifname "eth2" oifname "eth0" tcp dport { 80, 443 } accept comment "dmz fetches updates"
+    iifname "eth2" oifname "eth0" tcp dport 25 reject with tcp reset comment "but never sends mail"
+  }
+}
+
+table ip nat {
+  chain prerouting {
+    type nat hook prerouting priority dstnat; policy accept;
+    iifname "eth0" tcp dport 8080 dnat to 10.0.2.2:80
+  }
+  chain postrouting {
+    type nat hook postrouting priority srcnat; policy accept;
+    oifname "eth0" masquerade
+  }
+}

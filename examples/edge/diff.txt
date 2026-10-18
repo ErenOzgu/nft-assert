@@ -1,0 +1,5 @@
+lan -> fw tcp/22: accept -> drop
+wan -> dmz tcp/80: drop -> accept
+wan -> fw tcp/22: drop -> accept
+
+3 of 84 flows changed

@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+      - name: shellcheck
+        run: shellcheck examples/generate.sh
+      - name: actionlint
+        run: |
+          set -euo pipefail
+          v=1.7.7
+          base="https://github.com/rhysd/actionlint/releases/download/v${v}"
+          curl -fsSL -o "actionlint.tgz" "${base}/actionlint_${v}_linux_amd64.tar.gz"
+          curl -fsSL -o "checksums.txt" "${base}/actionlint_${v}_checksums.txt"
+          grep " actionlint_${v}_linux_amd64.tar.gz\$" checksums.txt | sed 's/ actionlint_.*/ actionlint.tgz/' | sha256sum -c -
+          tar -xzf actionlint.tgz actionlint
+          ./actionlint
+
+  test:
+    name: Tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: sudo apt-get install -y nftables
+      - run: pip install -e '.[dev]'
+      - name: Everything that needs no lab, as an ordinary user (the lab tests are skipped here)
+        run: python -m pytest -q -rs -p no:cacheprovider
+      - name: Everything, as root, and a skipped lab test is a failure
+        run: sudo -E env "PATH=$PATH" NFT_ASSERT_REQUIRE_LAB=1 python -m pytest -q -rs -p no:cacheprovider
+
+  machine:
+    name: Real namespaces and nftables (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-22.04, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get install -y nftables
+      - run: pip install -e '.[dev]'
+      - name: What this machine is
+        run: |
+          set -x
+          uname -r
+          nft --version
+          ip -V
+          id
+          sudo -n true && echo "passwordless sudo"
+      - name: The lab tests, none of them skipped
+        run: |
+          set -euo pipefail
+          sudo -E env "PATH=$PATH" NFT_ASSERT_REQUIRE_LAB=1 python -m pytest tests/test_live.py -v -rs -p no:cacheprovider | tee "$RUNNER_TEMP/live.txt"
+          if grep -E "SKIPPED|skipped" "$RUNNER_TEMP/live.txt"; then echo "::error::lab tests were skipped"; exit 1; fi
+      - name: The committed example outputs are what the tool prints today
+        run: sudo -E env "PATH=$PATH" examples/generate.sh --check
+      - name: No namespace is left behind
+        run: |
+          if ip netns list | grep -q '^nfta'; then ip netns list; echo "::error::namespaces left behind"; exit 1; fi
+
+  wheel:
+    name: The installed command works
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get install -y nftables
+      - name: Build a wheel and install it into a clean environment, the way a user would
+        run: |
+          set -euo pipefail
+          pip install build
+          python -m build
+          python -m venv "$RUNNER_TEMP/clean"
+          "$RUNNER_TEMP/clean/bin/pip" install dist/*.whl
+          unzip -l dist/*.whl
+          if unzip -l dist/*.whl | grep -q "tests/"; then echo "::error::the wheel contains tests"; exit 1; fi
+      - name: The command runs from another directory, as root, the way the README's CI snippet does
+        working-directory: ${{ runner.temp }}
+        env:
+          SRC: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          nfta="$RUNNER_TEMP/clean/bin/nft-assert"
+          "$nfta" --version
+          sudo -E "$nfta" check "$SRC/examples/edge/spec.toml" --junit "$RUNNER_TEMP/nft-assert.xml"
+          grep -q 'failures="0"' "$RUNNER_TEMP/nft-assert.xml"
+          sudo -E "$nfta" matrix "$SRC/examples/edge/spec.toml" --check "$SRC/examples/edge/matrix.md"
+          sudo -E "$nfta" check "$SRC/examples/hardening/spec.toml"
+          status=0
+          sudo -E "$nfta" check "$SRC/examples/edge/spec.toml" --ruleset "$SRC/examples/edge/firewall-broken.nft" | tee broken.txt >/dev/null || status=$?
+          test "$status" -eq 1
+          grep -q "FAIL  wan -> fw tcp/22" broken.txt
+          status=0
+          "$nfta" check "$SRC/examples/edge/spec.toml" 2> notroot.txt || status=$?
+          test "$status" -eq 3
+          grep -q "needs root" notroot.txt
+          sudo -E "$nfta" cleanup

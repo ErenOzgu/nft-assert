@@ -1,0 +1,28 @@
+#!/usr/sbin/nft -f
+# Managed by Ansible (ubuntu-hardening-roles). Local changes will be overwritten.
+#
+# Only the "hardening" table is touched. Tables from Docker, ufw or anything else stay as they are.
+# A packet has to be accepted by every input chain, so this table can only make the host stricter.
+table inet hardening
+delete table inet hardening
+
+table inet hardening {
+  chain input {
+    type filter hook input priority 0; policy drop;
+
+    ct state invalid drop
+    ct state established,related accept
+    iifname "lo" accept
+
+    ip protocol icmp icmp type { destination-unreachable, time-exceeded, parameter-problem, echo-request } limit rate 10/second accept
+    # Neighbour discovery and router advertisements are not optional on IPv6.
+    ip6 nexthdr ipv6-icmp accept
+
+    # DHCP lease renewals arrive from a different address than the one that is "established".
+    udp sport 67 udp dport 68 accept
+    udp sport 547 udp dport 546 accept
+
+    tcp dport 22 ct state new limit rate 10/minute accept
+    tcp dport { 443, 3306 } accept
+  }
+}

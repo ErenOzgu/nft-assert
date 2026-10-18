@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="t d">
+  <title id="t">nft-assert</title>
+  <desc id="d">Test an nftables ruleset with real packets in network namespaces.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#1b2230"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="420" fill="url(#bg)"/>
+  <rect width="1280" height="420" fill="url(#grid)"/>
+  <rect width="640" height="420" fill="url(#glow)"/>
+  <g transform="translate(0 0)">
+  <g font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif">
+    <text x="64" y="128" font-size="13" letter-spacing="3" fill="#38bdf8" font-weight="600">NFTABLES  ·  FIREWALL  ·  TESTING</text>
+    <text x="62" y="196" font-size="58" font-weight="700" fill="#f0f6fc">nft-assert</text>
+    <text x="64" y="244" font-size="22" fill="#9aa7b8">Load a ruleset into a lab of real network</text>
+    <text x="64" y="274" font-size="22" fill="#9aa7b8">namespaces. Send packets. See what got through.</text>
+    <g font-size="14" font-weight="600" fill="#d0d7de">
+      <rect x="64" y="304" width="218" height="34" rx="17" fill="#ffffff" fill-opacity="0.07" stroke="#ffffff" stroke-opacity="0.14"/><text x="173" y="326" text-anchor="middle">accept · drop · reject</text>
+      <rect x="294" y="304" width="134" height="34" rx="17" fill="#ffffff" fill-opacity="0.07" stroke="#ffffff" stroke-opacity="0.14"/><text x="361" y="326" text-anchor="middle">rule tracing</text>
+      <rect x="440" y="304" width="126" height="34" rx="17" fill="#ffffff" fill-opacity="0.07" stroke="#ffffff" stroke-opacity="0.14"/><text x="503" y="326" text-anchor="middle">stdlib only</text>
+    </g>
+  </g>
+  <g transform="translate(700 56)">
+    <rect width="516" height="308" rx="12" fill="#0b0f14" stroke="#ffffff" stroke-opacity="0.12"/>
+    <rect width="516" height="38" rx="12" fill="#ffffff" fill-opacity="0.05"/>
+    <circle cx="22" cy="19" r="6" fill="#f85149" fill-opacity="0.85"/>
+    <circle cx="42" cy="19" r="6" fill="#d29922" fill-opacity="0.85"/>
+    <circle cx="62" cy="19" r="6" fill="#3fb950" fill-opacity="0.85"/>
+    <text x="258" y="24" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12" fill="#8b949e">nft-assert check</text>
+    <g font-family="SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="13" fill="#8b949e">
+      <text x="22" y="76" xml:space="preserve"><tspan fill="#3fb950">PASS </tspan><tspan fill="#e6edf3">lan -&gt; dmz tcp/22</tspan></text>
+      <text x="22" y="102" xml:space="preserve"><tspan fill="#3fb950">PASS </tspan><tspan fill="#e6edf3">wan -&gt; dmz tcp/80</tspan><tspan fill="#8b949e"> drop</tspan></text>
+      <text x="22" y="128" xml:space="preserve"><tspan fill="#3fb950">PASS </tspan><tspan fill="#e6edf3">dmz -&gt; wan tcp/25</tspan><tspan fill="#8b949e"> reject</tspan></text>
+      <text x="22" y="154" xml:space="preserve"><tspan fill="#ff7b72">FAIL </tspan><tspan fill="#e6edf3">wan -&gt; fw tcp/22</tspan></text>
+      <text x="22" y="180" xml:space="preserve"><tspan fill="#8b949e">  expected drop, got accept</tspan></text>
+      <text x="22" y="206" xml:space="preserve"><tspan fill="#8b949e">  rule </tspan><tspan fill="#ff7b72">iifname "eth0"</tspan></text>
+      <text x="22" y="232" xml:space="preserve"><tspan fill="#ff7b72">  tcp dport 22 accept</tspan></text>
+      <text x="22" y="258" xml:space="preserve"><tspan fill="#8b949e">3 pass, 1 fail</tspan></text>
+    </g>
+  </g>
+  </g>
+</svg>

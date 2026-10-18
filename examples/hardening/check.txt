@@ -1,0 +1,16 @@
+nft-assert  spec.toml
+ruleset     host.nft
+lab         firewall + 1 zone (net); 10 flows checked first with no ruleset: all got through
+
+  PASS  net -> fw tcp/22    accept
+  PASS  net -> fw tcp/443   accept
+  PASS  net -> fw icmp      accept
+  PASS  net -> fw tcp/21    drop
+  PASS  net -> fw tcp/23    drop
+  PASS  net -> fw tcp/80    drop
+  PASS  net -> fw tcp/3306  drop
+  PASS  net -> fw tcp/5432  drop
+  PASS  net -> fw udp/53    drop
+  PASS  net -> fw udp/123   drop
+
+10 expectations, 10 pass, 0 fail

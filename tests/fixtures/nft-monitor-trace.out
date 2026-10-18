@@ -1,0 +1,33 @@
+trace id 97a3ff5b inet nfta_trace pre packet: iif "vl" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 61009 ip protocol tcp ip length 60 tcp sport 47122 tcp dport 22 tcp flags == syn tcp window 64240 
+trace id 97a3ff5b inet nfta_trace pre rule tcp dport { 22, 80, 8080 } meta nftrace set 1 (verdict continue)
+trace id 97a3ff5b inet nfta_trace pre policy accept 
+trace id 97a3ff5b inet filter forward packet: iif "vl" oif "vd" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 63 ip id 61009 ip protocol tcp ip length 60 tcp sport 47122 tcp dport 22 tcp flags == syn tcp window 64240 
+trace id 97a3ff5b inet filter forward rule iifname "vl" oifname "vd" tcp dport 22 accept (verdict accept)
+trace id 5bb33cdc inet nfta_trace pre packet: iif "vl" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 61010 ip protocol tcp ip length 52 tcp sport 47122 tcp dport 22 tcp flags == ack tcp window 63 
+trace id 5bb33cdc inet nfta_trace pre rule tcp dport { 22, 80, 8080 } meta nftrace set 1 (verdict continue)
+trace id 5bb33cdc inet nfta_trace pre policy accept 
+trace id 5bb33cdc inet filter forward packet: iif "vl" oif "vd" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 63 ip id 61010 ip protocol tcp ip length 52 tcp sport 47122 tcp dport 22 tcp flags == ack tcp window 63 
+trace id 5bb33cdc inet filter forward rule ct state established,related accept (verdict accept)
+trace id 89a19cd9 inet nfta_trace pre packet: iif "vl" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 61011 ip protocol tcp ip length 52 tcp sport 47122 tcp dport 22 tcp flags == ack tcp window 63 
+trace id 89a19cd9 inet nfta_trace pre rule tcp dport { 22, 80, 8080 } meta nftrace set 1 (verdict continue)
+trace id 89a19cd9 inet nfta_trace pre policy accept 
+trace id 89a19cd9 inet filter forward packet: iif "vl" oif "vd" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 63 ip id 61011 ip protocol tcp ip length 52 tcp sport 47122 tcp dport 22 tcp flags == ack tcp window 63 
+trace id 89a19cd9 inet filter forward rule ct state established,related accept (verdict accept)
+trace id 17067703 inet nfta_trace pre packet: iif "vl" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 61012 ip protocol tcp ip length 52 tcp sport 47122 tcp dport 22 tcp flags == 0x11 tcp window 63 
+trace id 17067703 inet nfta_trace pre rule tcp dport { 22, 80, 8080 } meta nftrace set 1 (verdict continue)
+trace id 17067703 inet nfta_trace pre policy accept 
+trace id 17067703 inet filter forward packet: iif "vl" oif "vd" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl trace id a7cef502 inet nfta_trace pre packet: iif "vl" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 16364 ip protocol tcp ip length 60 tcp sport 57166 tcp dport 80 tcp flags == syn tcp window 64240 
+trace id a7cef502 inet nfta_trace pre unknown rule handle 3 (verdict continue)
+trace id a7cef502 inet nfta_trace pre policy accept 
+trace id a7cef502 inet filter forward packet: iif "vl" oif "vd" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 63 ip id 16364 ip protocol tcp ip length 60 tcp sport 57166 tcp dport 80 tcp flags == syn tcp window 64240 
+trace id a7cef502 inet filter forward policy drop 
+trace id e9b54a75 inet nfta_trace pre packet: iif "vl" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 16365 ip protocol tcp ip length 60 tcp sport 57166 tcp dport 80 tcp flags == syn tcp window ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 16365 ip protocol tcp ip length 60 tcp sport 57166 tcp dport 80 tcp flags == syn tcp window 64240 
+trace id e9b54a75 inet nfta_trace pre rule tcp dport { 22, 80, 8080 } meta nftrace set 1 (verdict continue)
+trace id e9b54a75 inet nfta_trace pre policy accept 
+trace id e9b54a75 inet filter forward packet: iif "vl" oif "vd" ether saddr 6a:41:e1:71:03:34trace id 471c8e09 inet nfta_trace pre packet: iif "vl" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 64 ip id 38192 ip protocol tcp ip length 60 tcp sport 56374 tcp dport 8080 tcp flags == syn tcp window 64240 
+trace id 471c8e09 inet nfta_trace pre unknown rule handle 3 (verdict continue)
+trace id 471c8e09 inet nfta_trace pre policy accept 
+trace id 471c8e09 inet filter forward packet: iif "vl" oif "vd" ether saddr 6a:41:e1:71:03:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 63 ip id 38192 ip protocol tcp ip length 60 tcp sport 56374 tcp dport 8080 tcp flags == syn tcp window 64240 
+trace id 471c8e09 inet filter forward unknown rule handle 4 (verdict drop)
+:34 ether daddr 16:7d:83:87:76:81 ip saddr 10.0.1.2 ip daddr 10.0.2.2 ip dscp cs0 ip ecn not-ect ip ttl 63 ip id 38192 ip protocol tcp ip length 60 tcp sport 56374 tcp dport 8080 tcp flags == syn tcp window 64240 
+trace id 471c8e09 inet filter forward rule iifname "vl" oifname "vd" tcp dport 8080 reject with tcp reset (verdict drop)

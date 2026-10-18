@@ -1,0 +1,48 @@
+nft-assert  spec.toml
+ruleset     firewall-broken.nft
+lab         firewall + 3 zones (wan, lan, dmz); 27 flows checked first with no ruleset: all got through
+
+  PASS  lan -> wan tcp/80          accept
+          answered by wan on port 80, which saw the source 192.0.2.1
+  PASS  lan -> wan tcp/443         accept
+  PASS  lan -> wan udp/53          accept
+  PASS  lan -> wan icmp            accept
+  PASS  lan -> dmz tcp/22          accept
+  PASS  lan -> dmz tcp/80          accept
+  PASS  lan -> dmz tcp/443         accept
+  PASS  lan -> dmz icmp            accept
+  FAIL  lan -> fw tcp/22           accept
+          expected accept, got drop (no answer to the SYN in 1 s)
+          what the firewall did with the first packet:
+            ip nat prerouting: no rule matched, the chain policy is accept
+            inet filter input: no rule matched, the chain policy is drop
+  PASS  lan -> fw icmp             accept
+  PASS  dmz -> wan tcp/80          accept
+  PASS  dmz -> wan tcp/443         accept
+  PASS  wan -> fw icmp             accept
+  PASS  wan -> 192.0.2.1 tcp/8080  accept
+          answered by dmz on port 80, which saw the source 192.0.2.2
+  PASS  wan -> lan tcp/22          drop
+  PASS  wan -> lan tcp/80          drop
+  PASS  wan -> lan icmp            drop
+  PASS  wan -> dmz tcp/22          drop
+  FAIL  wan -> dmz tcp/80          drop
+          expected drop, got accept (connection established)
+          what the firewall did with the first packet:
+            ip nat prerouting: no rule matched, the chain policy is accept
+            inet filter forward: rule `iifname "eth0" oifname "eth2" tcp dport 80 accept comment "internet to the web server"` -> accept
+            ip nat postrouting: no rule matched, the chain policy is accept
+  FAIL  wan -> fw tcp/22           drop
+          expected drop, got accept (connection established)
+          what the firewall did with the first packet:
+            ip nat prerouting: no rule matched, the chain policy is accept
+            inet filter input: rule `iifname "eth0" tcp dport 22 accept comment "ssh to the firewall, from the lan only"` -> accept
+  PASS  wan -> fw tcp/80           drop
+  PASS  dmz -> lan tcp/22          drop
+  PASS  dmz -> lan tcp/80          drop
+  PASS  dmz -> lan icmp            drop
+  PASS  dmz -> fw tcp/22           drop
+  PASS  lan -> fw tcp/80           drop
+  PASS  dmz -> wan tcp/25          reject
+
+27 expectations, 24 pass, 3 fail

@@ -1,0 +1,51 @@
+# What the edge firewall must and must not let through.
+[ruleset]
+file = "firewall.nft"
+
+[zones.wan]
+subnet = "192.0.2.0/24"
+iface = "eth0"
+
+[zones.lan]
+subnet = "10.0.1.0/24"
+iface = "eth1"
+
+[zones.dmz]
+subnet = "10.0.2.0/24"
+iface = "eth2"
+
+[expect.accept]
+"lan -> wan" = ["tcp/80", "tcp/443", "udp/53", "icmp"]
+"lan -> dmz" = ["tcp/22", "tcp/80", "tcp/443", "icmp"]
+"lan -> fw" = ["tcp/22", "icmp"]
+"dmz -> wan" = ["tcp/80", "tcp/443"]
+"wan -> fw" = ["icmp"]
+"wan -> 192.0.2.1" = ["tcp/8080"]          # the port forward
+
+[expect.drop]
+"wan -> lan" = ["tcp/22", "tcp/80", "icmp"]
+"wan -> dmz" = ["tcp/22", "tcp/80"]        # the web server is not reachable directly
+"wan -> fw" = ["tcp/22", "tcp/80"]
+"dmz -> lan" = ["tcp/22", "tcp/80", "icmp"]
+"dmz -> fw" = ["tcp/22"]
+"lan -> fw" = ["tcp/80"]
+
+[expect.reject]
+"dmz -> wan" = ["tcp/25"]                  # a refusal the sender notices, not silence
+
+# Who answered the port forward, on which port, and what address the web server saw. The masquerade
+# should show the internet host the firewall's address, not the lan's.
+[[observe]]
+flow = "wan -> 192.0.2.1 tcp/8080"
+reached = "dmz"
+reached_port = 80
+source_seen = "192.0.2.2"
+
+[[observe]]
+flow = "lan -> wan tcp/80"
+source_seen = "192.0.2.1"
+
+[matrix]
+tcp = [22, 25, 80, 443, 8080]
+udp = [53]
+icmp = true

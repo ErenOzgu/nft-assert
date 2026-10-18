@@ -82,7 +82,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo -E env "PATH=$PATH" NFT_ASSERT_REQUIRE_LAB=1 python -m pytest tests/test_live.py -v -rs -p no:cacheprovider | tee "$RUNNER_TEMP/live.txt"
-          if grep -E "SKIPPED|skipped" "$RUNNER_TEMP/live.txt"; then echo "::error::lab tests were skipped"; exit 1; fi
+          if grep -E "( SKIPPED|[0-9] skipped)" "$RUNNER_TEMP/live.txt"; then echo "::error::lab tests were skipped"; exit 1; fi
       - name: The committed example outputs are what the tool prints today
         run: sudo -E env "PATH=$PATH" examples/generate.sh --check
       - name: No namespace is left behind

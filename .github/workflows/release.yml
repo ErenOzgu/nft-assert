@@ -25,7 +25,7 @@ jobs:
       tag: ${{ steps.pick.outputs.tag }}
       release: ${{ steps.pick.outputs.release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Decide the tag, and whether it still needs a release
         id: pick
         env:
@@ -67,7 +67,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: The version in pyproject.toml and the package is the one being released
         run: |
           set -euo pipefail
@@ -75,13 +75,13 @@ jobs:
           have=$(sed -nE 's/^version = "([^"]+)"/\1/p' pyproject.toml | head -1)
           [[ "${have}" == "${want}" ]] || { echo "::error::pyproject.toml says ${have}, the release is ${want}"; exit 1; }
           grep -rq "__version__ = \"${want}\"" --include=__init__.py . || { echo "::error::__version__ is not ${want}"; exit 1; }
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - name: Test, as root, with the lab tests required
         run: |
           sudo apt-get install -y nftables
-          pip install -e '.[dev]' build
+          pip install -e '.[dev]' build==1.6.1
           sudo -E env "PATH=$PATH" NFT_ASSERT_REQUIRE_LAB=1 python -m pytest -q -p no:cacheprovider
       - name: Build
         run: |

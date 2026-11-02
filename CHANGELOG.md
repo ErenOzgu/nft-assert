@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versions follow [SemVer
 ## Unreleased
 
 ### Added
+- `check --only PATTERN` and `--skip PATTERN` (repeatable globs matched against the `from -> to probe` text) run a
+  part of the spec while one rule is being fixed. Flows that are left out are not sent, and a selection that leaves
+  nothing is exit 2.
 - `check --github-annotations` prints one `::error` workflow command per failed expectation, so GitHub Actions shows
   the failure (with the deciding rule from the trace) on the pull request. A spec path inside `$GITHUB_WORKSPACE` is
   made relative, which is what GitHub needs to attach the note to the file.

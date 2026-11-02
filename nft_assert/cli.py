@@ -47,6 +47,18 @@ def build_parser() -> argparse.ArgumentParser:
         default="text",
         help="how to print the result (default text)",
     )
+    c.add_argument(
+        "--only",
+        action="append",
+        metavar="PATTERN",
+        help='check only expectations whose text ("lan -> dmz tcp/443") matches this glob; repeatable',
+    )
+    c.add_argument(
+        "--skip",
+        action="append",
+        metavar="PATTERN",
+        help="leave out expectations whose text matches this glob; repeatable",
+    )
     c.add_argument("--junit", metavar="FILE", help="also write a JUnit XML report")
     c.add_argument(
         "--github-summary", action="store_true", help="append a Markdown report to $GITHUB_STEP_SUMMARY"
@@ -143,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _check(args: argparse.Namespace, s: spec_mod.Spec) -> int:
     run = engine.check(
-        s,
+        spec_mod.select(s, args.only, args.skip),
         Path(args.ruleset).resolve() if args.ruleset else None,
         explain=not args.no_explain,
         do_sanity=not args.no_sanity,

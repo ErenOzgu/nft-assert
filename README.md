@@ -208,6 +208,12 @@ drops it. The third is the same typo seen from the internet.
 The trace is only an explanation. Whether a flow counts as accepted, rejected or dropped is decided by the packets
 that actually arrived or did not, never by the trace.
 
+While you fix one rule in a large spec, check just that part. `--only` and `--skip` take globs that are matched against
+the same text the report prints, `from -> to probe`, and both can be repeated. With the edge example,
+`nft-assert check examples/edge/spec.toml --only 'lan -> dmz *'` checks 4 of its 27 expectations and
+`--skip '* icmp'` checks the other 21 that are not ping. The other flows are not sent at all, not even in the sanity
+pass. A pattern set that leaves nothing is an error (exit 2), so a typo cannot produce a green run that checked nothing.
+
 ## Who can reach whom
 
 `nft-assert matrix` sends every kind of traffic from every place to every other place and prints a table. Commit it,
@@ -334,6 +340,8 @@ from a port nobody listens on.
 | `check` | `--timeout SECONDS` | how long a silent flow is waited for before it counts as dropped (default: the spec's, else 1) |
 | `check` | `--ruleset FILE` | load this ruleset instead of the one named in the spec |
 | `check` | `-f, --format {text,md,json}` | how to print the result (default text) |
+| `check` | `--only PATTERN` | check only expectations whose text ("lan -> dmz tcp/443") matches this glob; repeatable |
+| `check` | `--skip PATTERN` | leave out expectations whose text matches this glob; repeatable |
 | `check` | `--junit FILE` | also write a JUnit XML report |
 | `check` | `--github-summary` | append a Markdown report to $GITHUB_STEP_SUMMARY |
 | `check` | `--github-annotations` | print one ::error line per failed expectation, which GitHub Actions shows on the pull request |

@@ -6,10 +6,11 @@ A spec is TOML. Every table is checked, and a key this program does not know is 
 
 from __future__ import annotations
 
+import fnmatch
 import ipaddress
 import re
 import tomllib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -102,6 +103,29 @@ class Spec:
     @property
     def endpoints(self) -> list[str]:
         return [FW, *self.zones]
+
+
+def select(spec: Spec, only: list[str] | None = None, skip: list[str] | None = None) -> Spec:
+    """A copy of ``spec`` with only the expectations whose ``from -> to probe`` text matches.
+
+    ``only`` and ``skip`` are glob patterns (``*`` ``?`` ``[..]``, case-sensitive). With ``only`` an expectation has to
+    match at least one pattern; with ``skip`` it must match none. Nothing left is an error: a typo in a pattern must
+    not turn into a green run that checked nothing.
+    """
+    if not only and not skip:
+        return spec
+    kept = [
+        e
+        for e in spec.expectations
+        if (not only or any(fnmatch.fnmatchcase(str(e.flow), g) for g in only))
+        and not any(fnmatch.fnmatchcase(str(e.flow), g) for g in skip or [])
+    ]
+    if not kept:
+        raise SpecError(
+            f"--only/--skip leave no expectation to check (the spec has {len(spec.expectations)}); "
+            'patterns are matched against text like "lan -> dmz tcp/443"'
+        )
+    return replace(spec, expectations=kept)
 
 
 def _table(value: Any, where: str, allowed: set[str]) -> dict[str, Any]:

@@ -332,3 +332,44 @@ def test_mutated_specs_either_parse_or_say_why(seed):
             S.parse(raw, Path("/specs/spec.toml"))
         except SpecError:
             pass
+
+
+@pytest.fixture
+def edge():
+    return S.load(Path(__file__).resolve().parent.parent / "examples" / "edge" / "spec.toml")
+
+
+class TestSelect:
+    def texts(self, spec):
+        return [str(e.flow) for e in spec.expectations]
+
+    def test_no_patterns_is_the_same_spec(self, edge):
+        assert S.select(edge) is edge
+        assert S.select(edge, [], []) is edge
+
+    def test_only_is_any_of_the_globs(self, edge):
+        every = self.texts(edge)
+        got = self.texts(S.select(edge, ["wan -> *", "lan -> wan *"]))
+        assert got == [t for t in every if t.startswith(("wan -> ", "lan -> wan "))]
+        assert 0 < len(got) < len(every)
+
+    def test_skip_removes_and_wins_over_only(self, edge):
+        every = self.texts(edge)
+        assert self.texts(S.select(edge, None, ["* tcp/*"])) == [t for t in every if " tcp/" not in t]
+        with pytest.raises(SpecError):
+            S.select(edge, ["wan -> *"], ["wan -> *"])
+
+    def test_matching_is_case_sensitive_and_on_the_whole_text(self, edge):
+        with pytest.raises(SpecError):
+            S.select(edge, ["WAN -> *"])
+        with pytest.raises(SpecError):
+            S.select(edge, ["wan"])
+
+    def test_nothing_left_is_an_error_that_shows_the_text_form(self, edge):
+        with pytest.raises(SpecError, match=r"lan -> dmz tcp/443"):
+            S.select(edge, ["nowhere -> *"])
+
+    def test_the_original_spec_is_not_changed(self, edge):
+        n = len(edge.expectations)
+        S.select(edge, ["wan -> *"])
+        assert len(edge.expectations) == n

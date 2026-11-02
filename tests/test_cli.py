@@ -75,12 +75,17 @@ class FakeEngine:
 
     def __init__(self, monkeypatch, *, failing=True):
         self.calls = []
+        self.specs = []
         run = fake_run()
         if not failing:
             run.checks = [c for c in run.checks if c.ok]
-        monkeypatch.setattr(
-            engine, "check", lambda spec, ruleset=None, **kw: (self.calls.append((ruleset, kw)), run)[1]
-        )
+
+        def fake_check(spec, ruleset=None, **kw):
+            self.calls.append((ruleset, kw))
+            self.specs.append(spec)
+            return run
+
+        monkeypatch.setattr(engine, "check", fake_check)
         monkeypatch.setattr(engine, "matrix", lambda spec, ruleset=None, **kw: fake_matrix())
         monkeypatch.setattr(
             engine, "diff", lambda spec, old, new, **kw: (fake_matrix(), fake_matrix(), self.changes)
@@ -112,6 +117,22 @@ class TestCheck:
         cli.main(["check", str(EDGE), "--ruleset", str(other), "--no-explain", "--no-sanity"])
         ruleset, kw = fake.calls[0]
         assert ruleset == other.resolve() and kw == {"explain": False, "do_sanity": False}
+
+    def test_only_and_skip_narrow_the_spec_the_engine_gets(self, monkeypatch):
+        fake = FakeEngine(monkeypatch)
+        cli.main(["check", str(EDGE)])
+        everything = [str(e.flow) for e in fake.specs[-1].expectations]
+        cli.main(["check", str(EDGE), "--only", "wan -> *"])
+        only = [str(e.flow) for e in fake.specs[-1].expectations]
+        assert only and len(only) < len(everything) and all(t.startswith("wan -> ") for t in only)
+        cli.main(["check", str(EDGE), "--skip", "wan -> *"])
+        skipped = [str(e.flow) for e in fake.specs[-1].expectations]
+        assert sorted(only + skipped) == sorted(everything)
+
+    def test_a_pattern_that_matches_nothing_is_exit_2(self, monkeypatch, capsys):
+        FakeEngine(monkeypatch)
+        assert cli.main(["check", str(EDGE), "--only", "nowhere -> *"]) == 2
+        assert "leave no expectation" in capsys.readouterr().err
 
     def test_junit_file(self, monkeypatch, tmp_path):
         FakeEngine(monkeypatch)

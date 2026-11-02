@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nft-assert"
-version = "0.1.0"
+version = "0.2.0"
 description = "Load an nftables ruleset into a lab of real network namespaces, send real packets, and check which flows are accepted, rejected or dropped. Names the rule that decided a failed check."
 readme = "README.md"
 requires-python = ">=3.11"
